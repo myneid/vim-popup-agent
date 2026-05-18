@@ -5,10 +5,11 @@ if exists('g:loaded_popup_agent') || !has('popupwin') || !has('terminal')
 endif
 g:loaded_popup_agent = 1
 
-# Save popup position just before it closes
+# Save popup position when it closes; clean up when terminal buffer is deleted
 augroup PopupAgent
     autocmd!
-    autocmd WinClosed * popup_agent#SavePos(str2nr(expand('<awin>')))
+    autocmd WinClosed  * popup_agent#SavePos(str2nr(expand('<awin>')))
+    autocmd BufDelete  * popup_agent#OnBufDelete(str2nr(expand('<abuf>')))
 augroup END
 
 # :Agent [name]  — open default or named agent

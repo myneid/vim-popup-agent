@@ -1,6 +1,6 @@
 # vim-popup-agent
 
-A Vim9 plugin that opens an interactive AI chat terminal in a floating popup window. Supports Claude, GitHub Copilot, and OpenAI Codex out of the box. The popup remembers its last position across invocations.
+A Vim9 plugin that opens an interactive AI chat terminal in a floating popup window. Supports Claude, GitHub Copilot, and OpenAI Codex out of the box. Closing the popup hides it — the terminal session keeps running in the background and reopens where you left off. The popup also remembers its last position.
 
 ## Requirements
 
@@ -56,7 +56,8 @@ Tab-completion works on the agent name argument.
 |--------|-----|
 | Open default agent | `<leader>a` or `:Agent` |
 | Open specific agent | `:Agent claude` / `:Agent copilot` / `:Agent codex` |
-| Close popup | Click the `×` button, or let the CLI session exit |
+| Hide popup | Click the `×` button — the session keeps running in the background |
+| Close session | Exit the CLI normally (e.g. `/exit`, `Ctrl-D`) — the popup closes too |
 | Move popup | Click and drag the title bar |
 | Resize popup | Drag the popup edges |
 
