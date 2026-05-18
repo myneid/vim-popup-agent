@@ -21,19 +21,19 @@ Should print `1`.
 
 **vim-plug**
 ```vim
-Plug 'you/vim-popup-agent'
+Plug 'myneid/vim-popup-agent'
 ```
 
 **packer.nvim** — not applicable (Vim only)
 
 **Vundle**
 ```vim
-Plugin 'you/vim-popup-agent'
+Plugin 'myneid/vim-popup-agent'
 ```
 
 **Native packages**
 ```sh
-git clone https://github.com/you/vim-popup-agent \
+git clone https://github.com/myneid/vim-popup-agent \
     ~/.vim/pack/plugins/start/vim-popup-agent
 ```
 
