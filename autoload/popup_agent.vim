@@ -34,8 +34,8 @@ export def PopupFilter(pid: number, key: string): bool
         # ppos.line / ppos.col include the border; ppos.width is content-only.
         # Top border row is ppos.line; [×] occupies the last len(CLOSE_BTN)
         # columns of the title, ending one col before the right corner.
-        if !empty(ppos) && mpos.screenrow == ppos.line
-            \ && mpos.screencol >= ppos.col + ppos.width - len(CLOSE_BTN)
+        if !empty(ppos) && mpos.screenrow == ppos.line - 1
+            \ && mpos.screencol >= ppos.col + ppos.width - strwidth(CLOSE_BTN)
             Hide()
             return true
         endif
@@ -115,8 +115,6 @@ export def Open(arg: string)
     active[name] = pid
     by_id[string(pid)] = name
 
-    # In the terminal buffer, :w hides the popup instead of writing
-    win_execute(pid, 'command! -buffer w call popup_agent#Hide()')
 enddef
 
 
