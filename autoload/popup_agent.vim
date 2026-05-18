@@ -25,6 +25,25 @@ def AllAgents(): dict<list<string>>
 enddef
 
 
+const CLOSE_BTN = ' [×] '
+
+export def PopupFilter(pid: number, key: string): bool
+    if key == "\<LeftMouse>"
+        var mpos = getmousepos()
+        var ppos = popup_getpos(pid)
+        # ppos.line / ppos.col include the border; ppos.width is content-only.
+        # Top border row is ppos.line; [×] occupies the last len(CLOSE_BTN)
+        # columns of the title, ending one col before the right corner.
+        if !empty(ppos) && mpos.screenrow == ppos.line
+            \ && mpos.screencol >= ppos.col + ppos.width - len(CLOSE_BTN)
+            Hide()
+            return true
+        endif
+    endif
+    return false
+enddef
+
+
 export def Open(arg: string)
     var name = empty(arg) ? get(g:, 'popup_agent_default', 'claude') : arg
     var agents = AllAgents()
@@ -37,10 +56,10 @@ export def Open(arg: string)
         return
     endif
 
-    # Re-focus an already-visible popup
+    # Re-focus an already-open popup (visible or hidden via popup_hide)
     if has_key(active, name)
         var eid = active[name]
-        if !empty(popup_getpos(eid))
+        if index(popup_list(), eid) >= 0
             popup_show(eid)
             return
         endif
@@ -69,6 +88,13 @@ export def Open(arg: string)
         buf_to_name[string(buf)] = name
     endif
 
+    # Build a full-width title so [×] sits flush against the right border.
+    # Vim auto-adds one separator dash on each side, so the title string itself
+    # should be (content_width - 2) chars to fill the space exactly.
+    var name_part = printf(' %s ', name)
+    var fill_len = max([1, (w - 2) - len(name_part) - len(CLOSE_BTN)])
+    var title_str = name_part .. repeat('─', fill_len) .. CLOSE_BTN
+
     var pid = popup_create(buf, {
         line:        ln,
         col:         cl,
@@ -78,15 +104,19 @@ export def Open(arg: string)
         maxheight:   h,
         border:      [],
         borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-        title:       printf('  %s  ', name),
+        title:       title_str,
         drag:        1,
         resize:      1,
-        close:       'button',
+        close:       'none',
         mapping:     0,
+        filter:      'popup_agent#PopupFilter',
     })
 
     active[name] = pid
     by_id[string(pid)] = name
+
+    # In the terminal buffer, :w hides the popup instead of writing
+    win_execute(pid, 'command! -buffer w call popup_agent#Hide()')
 enddef
 
 
@@ -119,6 +149,18 @@ export def OnBufDelete(buf: number)
     if has_key(term_buf, name) && term_buf[name] == buf
         remove(term_buf, name)
     endif
+enddef
+
+
+export def Hide()
+    for [name, pid] in items(active)
+        var pos = popup_getpos(pid)
+        if !empty(pos)
+            saved_line = pos.line
+            saved_col  = pos.col
+        endif
+        popup_hide(pid)
+    endfor
 enddef
 
 

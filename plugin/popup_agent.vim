@@ -5,6 +5,7 @@ if exists('g:loaded_popup_agent') || !has('popupwin') || !has('terminal')
 endif
 g:loaded_popup_agent = 1
 
+
 # Save popup position when it closes; clean up when terminal buffer is deleted
 augroup PopupAgent
     autocmd!
@@ -16,8 +17,12 @@ augroup END
 command! -nargs=? -complete=customlist,popup_agent#Complete
     \ Agent popup_agent#Open(<q-args>)
 
-# <Plug> mapping so users can rebind without touching plugin internals
+# :AgentHide  — hide the popup without ending the terminal session
+command! AgentHide popup_agent#Hide()
+
+# <Plug> mappings so users can rebind without touching plugin internals
 nnoremap <silent> <Plug>(popup-agent-open) <Cmd>Agent<CR>
+nnoremap <silent> <Plug>(popup-agent-hide) <Cmd>AgentHide<CR>
 
 # Default <leader>a unless the user mapped <Plug>(popup-agent-open) themselves
 # or set g:popup_agent_no_maps = 1

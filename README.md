@@ -56,7 +56,8 @@ Tab-completion works on the agent name argument.
 |--------|-----|
 | Open default agent | `<leader>a` or `:Agent` |
 | Open specific agent | `:Agent claude` / `:Agent copilot` / `:Agent codex` |
-| Hide popup | Click the `×` button — the session keeps running in the background |
+| Hide popup (keep session) | `:w` inside the popup, `:AgentHide`, or click the `×` button |
+| Reopen hidden popup | `<leader>a` or `:Agent` — resumes the same session |
 | Close session | Exit the CLI normally (e.g. `/exit`, `Ctrl-D`) — the popup closes too |
 | Move popup | Click and drag the title bar |
 | Resize popup | Drag the popup edges |
@@ -94,6 +95,7 @@ let g:popup_agent_no_maps = 1
 
 " Then bind however you like
 nmap <C-a> <Plug>(popup-agent-open)
+nmap <C-x> <Plug>(popup-agent-hide)
 
 " Or bind individual agents
 nnoremap <leader>ac <Cmd>Agent claude<CR>
