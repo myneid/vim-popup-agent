@@ -8,12 +8,11 @@ const AGENTS: dict<list<string>> = {
 }
 
 # Session state
-var saved_line:  number = 0
-var saved_col:   number = 0
-var active:      dict<number> = {}   # name      -> popup_id (only while visible)
-var by_id:       dict<string> = {}   # popup_id# -> name
-var term_buf:    dict<number> = {}   # name      -> buf (persists while terminal runs)
-var buf_to_name: dict<string> = {}   # buf#      -> name (for cleanup)
+var saved_pos:   dict<list<number>> = {}  # name -> [line, col]
+var active:      dict<number> = {}        # name -> popup_id (visible or hidden)
+var by_id:       dict<string> = {}        # popup_id# -> name
+var term_buf:    dict<number> = {}        # name -> buf (persists while terminal runs)
+var buf_to_name: dict<string> = {}        # buf# -> name (for cleanup)
 
 
 def AllAgents(): dict<list<string>>
@@ -31,16 +30,33 @@ export def PopupFilter(pid: number, key: string): bool
     if key == "\<LeftMouse>"
         var mpos = getmousepos()
         var ppos = popup_getpos(pid)
-        # ppos.line / ppos.col include the border; ppos.width is content-only.
-        # Top border row is ppos.line; [×] occupies the last len(CLOSE_BTN)
-        # columns of the title, ending one col before the right corner.
+        # ppos.line is the top border row; ppos.col is the left border column.
+        # ppos.width is content width (excludes borders).
+        # Title fills the full content width so CLOSE_BTN sits in the last
+        # strwidth(CLOSE_BTN) columns before the right border corner.
         if !empty(ppos) && mpos.screenrow == ppos.line
             \ && mpos.screencol >= ppos.col + ppos.width - strwidth(CLOSE_BTN)
-            Hide()
+            HideOne(pid)
             return true
         endif
     endif
     return false
+enddef
+
+
+def HideOne(pid: number)
+    var key = string(pid)
+    if !has_key(by_id, key)
+        return
+    endif
+    var name = by_id[key]
+    var pos = popup_getpos(pid)
+    if !empty(pos)
+        saved_pos[name] = [pos.line, pos.col]
+    endif
+    # popup_hide preserves the terminal job; popup_close would kill it.
+    popup_hide(pid)
+    # Keep active/by_id intact — the popup still exists, just not visible.
 enddef
 
 
@@ -56,20 +72,23 @@ export def Open(arg: string)
         return
     endif
 
-    # Re-focus an already-open popup (visible or hidden via popup_hide)
+    # Re-show an already-tracked popup (visible or hidden via popup_hide).
     if has_key(active, name)
         var eid = active[name]
-        if index(popup_list(), eid) >= 0
+        if !empty(popup_getpos(eid))
             popup_show(eid)
             return
         endif
+        # Stale entry — popup was closed without going through SavePos.
         remove(active, name)
+        remove(by_id, string(eid))
     endif
 
     var w  = get(g:, 'popup_agent_width',  100)
     var h  = get(g:, 'popup_agent_height',  30)
-    var ln = saved_line > 0 ? saved_line : max([1, (&lines   - h) / 2])
-    var cl = saved_col  > 0 ? saved_col  : max([1, (&columns - w) / 2])
+    var pos = get(saved_pos, name, [])
+    var ln = empty(pos) ? max([1, (&lines   - h) / 2]) : pos[0]
+    var cl = empty(pos) ? max([1, (&columns - w) / 2]) : pos[1]
 
     var cmd = agents[name]
     var buf: number
@@ -77,22 +96,21 @@ export def Open(arg: string)
                 \ && term_getstatus(term_buf[name]) =~# 'running'
         buf = term_buf[name]
     else
-        buf = term_start(cmd, {hidden: 1, term_finish: 'close'})
+        buf = term_start(cmd, {hidden: 1, term_finish: 'close', term_name: name})
         if buf <= 0
             echohl ErrorMsg
             echom printf('popup-agent: could not start "%s" (is "%s" on $PATH?)', name, cmd[0])
             echohl None
             return
         endif
-        term_buf[name]    = buf
+        term_buf[name]        = buf
         buf_to_name[string(buf)] = name
     endif
 
-    # Build a full-width title so [×] sits flush against the right border.
-    # Vim auto-adds one separator dash on each side, so the title string itself
-    # should be (content_width - 2) chars to fill the space exactly.
+    # Title fills the full content width (w columns) so [×] sits flush
+    # against the right border corner. Use strwidth() for multibyte safety.
     var name_part = printf(' %s ', name)
-    var fill_len = max([1, (w - 2) - len(name_part) - len(CLOSE_BTN)])
+    var fill_len = max([1, w - strwidth(name_part) - strwidth(CLOSE_BTN)])
     var title_str = name_part .. repeat('─', fill_len) .. CLOSE_BTN
 
     var pid = popup_create(buf, {
@@ -114,7 +132,6 @@ export def Open(arg: string)
 
     active[name] = pid
     by_id[string(pid)] = name
-
 enddef
 
 
@@ -123,17 +140,14 @@ export def SavePos(win_id: number)
     if !has_key(by_id, key)
         return
     endif
+    var name = by_id[key]
     var pos = popup_getpos(win_id)
     if !empty(pos)
-        saved_line = pos.line
-        saved_col  = pos.col
+        saved_pos[name] = [pos.line, pos.col]
     endif
-    var name = by_id[key]
-    if has_key(active, name)
-        remove(active, name)
-    endif
+    remove(active, name)
     remove(by_id, key)
-    # term_buf is intentionally kept — terminal process stays alive for reuse
+    # term_buf is intentionally kept — terminal process stays alive for reuse.
 enddef
 
 
@@ -152,7 +166,7 @@ enddef
 
 export def Hide()
     for [name, pid] in items(copy(active))
-        popup_close(pid)
+        HideOne(pid)
     endfor
 enddef
 
