@@ -9,7 +9,7 @@ const AGENTS: dict<list<string>> = {
 
 # Session state
 var saved_pos:   dict<list<number>> = {}  # name -> [line, col]
-var active:      dict<number> = {}        # name -> popup_id (visible or hidden)
+var active:      dict<number> = {}        # name -> popup_id (only while visible)
 var by_id:       dict<string> = {}        # popup_id# -> name
 var term_buf:    dict<number> = {}        # name -> buf (persists while terminal runs)
 var buf_to_name: dict<string> = {}        # buf# -> name (for cleanup)
@@ -54,9 +54,10 @@ def HideOne(pid: number)
     if !empty(pos)
         saved_pos[name] = [pos.line, pos.col]
     endif
-    # popup_hide preserves the terminal job; popup_close would kill it.
-    popup_hide(pid)
-    # Keep active/by_id intact — the popup still exists, just not visible.
+    # popup_hide is forbidden for terminal popups (E863); close the popup
+    # instead — the terminal buffer persists in term_buf while the job runs.
+    # WinClosed fires and SavePos cleans up active/by_id.
+    popup_close(pid)
 enddef
 
 
@@ -72,11 +73,10 @@ export def Open(arg: string)
         return
     endif
 
-    # Re-show an already-tracked popup (visible or hidden via popup_hide).
+    # If the popup is currently open and visible, nothing to do.
     if has_key(active, name)
         var eid = active[name]
         if !empty(popup_getpos(eid))
-            popup_show(eid)
             return
         endif
         # Stale entry — popup was closed without going through SavePos.
