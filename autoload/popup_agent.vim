@@ -3,7 +3,7 @@ vim9script
 # Built-in agent CLI commands
 const AGENTS: dict<list<string>> = {
     claude:  ['claude'],
-    copilot: ['gh', 'copilot', 'chat'],
+    copilot: ['copilot'],
     codex:   ['codex'],
 }
 
@@ -21,26 +21,6 @@ def AllAgents(): dict<list<string>>
         result[k] = v
     endfor
     return result
-enddef
-
-
-const CLOSE_BTN = ' [×] '
-
-export def PopupFilter(pid: number, key: string): bool
-    if key == "\<LeftMouse>"
-        var mpos = getmousepos()
-        var ppos = popup_getpos(pid)
-        # ppos.line is the top border row; ppos.col is the left border column.
-        # ppos.width is content width (excludes borders).
-        # Title fills the full content width so CLOSE_BTN sits in the last
-        # strwidth(CLOSE_BTN) columns before the right border corner.
-        if !empty(ppos) && mpos.screenrow == ppos.line
-            \ && mpos.screencol >= ppos.col + ppos.width - strwidth(CLOSE_BTN)
-            HideOne(pid)
-            return true
-        endif
-    endif
-    return false
 enddef
 
 
@@ -107,12 +87,6 @@ export def Open(arg: string)
         buf_to_name[string(buf)] = name
     endif
 
-    # Title fills the full content width (w columns) so [×] sits flush
-    # against the right border corner. Use strwidth() for multibyte safety.
-    var name_part = printf(' %s ', name)
-    var fill_len = max([1, w - strwidth(name_part) - strwidth(CLOSE_BTN)])
-    var title_str = name_part .. repeat('─', fill_len) .. CLOSE_BTN
-
     var pid = popup_create(buf, {
         line:        ln,
         col:         cl,
@@ -122,12 +96,11 @@ export def Open(arg: string)
         maxheight:   h,
         border:      [],
         borderchars: ['─', '│', '─', '│', '╭', '╮', '╯', '╰'],
-        title:       title_str,
+        title:       printf(' %s ', name),
         drag:        1,
         resize:      1,
-        close:       'none',
+        close:       'button',
         mapping:     0,
-        filter:      'popup_agent#PopupFilter',
     })
 
     active[name] = pid
