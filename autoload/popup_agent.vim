@@ -153,13 +153,8 @@ enddef
 
 
 export def Hide()
-    for [name, pid] in items(active)
-        var pos = popup_getpos(pid)
-        if !empty(pos)
-            saved_line = pos.line
-            saved_col  = pos.col
-        endif
-        popup_hide(pid)
+    for [name, pid] in items(copy(active))
+        popup_close(pid)
     endfor
 enddef
 
