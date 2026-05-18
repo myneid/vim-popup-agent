@@ -34,7 +34,7 @@ export def PopupFilter(pid: number, key: string): bool
         # ppos.line / ppos.col include the border; ppos.width is content-only.
         # Top border row is ppos.line; [×] occupies the last len(CLOSE_BTN)
         # columns of the title, ending one col before the right corner.
-        if !empty(ppos) && mpos.screenrow == ppos.line - 1
+        if !empty(ppos) && mpos.screenrow == ppos.line
             \ && mpos.screencol >= ppos.col + ppos.width - strwidth(CLOSE_BTN)
             Hide()
             return true
