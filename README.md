@@ -149,4 +149,4 @@ Then `:Agent aider` opens it.
 
 ## License
 
-MIT
+Unlicense
