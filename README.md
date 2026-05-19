@@ -2,6 +2,9 @@
 
 A Vim9 plugin that opens an interactive AI chat terminal in a floating popup window. Supports Claude, GitHub Copilot, and OpenAI Codex out of the box. Closing the popup hides it — the terminal session keeps running in the background and reopens where you left off. The popup also remembers its last position.
 
+<img width="480" height="330" alt="img-1116" src="https://github.com/user-attachments/assets/0d92895c-e8fd-4527-9628-16f08da033d2" />
+
+
 ## Requirements
 
 - Vim 8.2+ (compiled with `+terminal` and `+popupwin`)
