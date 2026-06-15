@@ -87,11 +87,34 @@ let g:popup_agent_no_maps = 1
 let g:popup_agent_commands = {
     \ 'claude': ['claude', '--model', 'claude-opus-4-7'],
     \ 'gpt':    ['sgpt', '--repl', 'temp'],
+    \ 'copilotgemma': ['ollama', 'launch', 'copilot', '--model', 'gemma4:12b-mlx'],
+    \ 'oc': [
+    \   'env',
+    \   'OPENCODE_CONFIG=/Users/tanguy/.config/opencode/mlx.jsonc',
+    \   '/Users/tanguy/.opencode/bin/opencode',
+    \   '--model',
+    \   'mlx/gemma-4-26b-it'
+    \ ],
+    \ 'copilotmlx': [
+    \   'env',
+    \   'COPILOT_PROVIDER_BASE_URL=http://127.0.0.1:8081/v1',
+    \   'COPILOT_PROVIDER_TYPE=openai',
+    \   'COPILOT_PROVIDER_WIRE_API=completions',
+    \   'COPILOT_PROVIDER_MODEL_ID=gemma-4-26b-it',
+    \   'COPILOT_PROVIDER_WIRE_MODEL=/Volumes/Extra/lmstudio/lmstudio-community/gemma-4-26B-A4B-it-QAT-MLX-4bit',
+    \   'COPILOT_PROVIDER_MAX_PROMPT_TOKENS=32768',
+    \   'COPILOT_PROVIDER_MAX_OUTPUT_TOKENS=4096',
+    \   'COPILOT_OFFLINE=false',
+    \   'copilot',
+    \   '--disable-builtin-mcps',
+    \   '--no-remote',
+    \   '--allow-all'
+    \ ],
     \ }
 ```
 
 ### Custom key mapping
-
+...
 ```vim
 " Disable the default map first
 let g:popup_agent_no_maps = 1
